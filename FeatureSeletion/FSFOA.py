@@ -2,8 +2,6 @@
 from numpy import *
 from tools import *
 import itertools#处理list的嵌套问题
-#fea_combination=2**num_fea_original#特征排列组合后的个数
-#print('原数据集特征数目：',num_fea_original)
 
 loop_condition=8#最起码要大于lifetime=15的值 ，因为播种一次age才曾1
 initialization_parameters = [15, 12, 30, 0.05, 50]
@@ -22,8 +20,8 @@ for i in range(num_fea_original):
 
 
 
-original_acc= train_knn(trainX, trainy,predictX, predicty)
-#original_acc=train_svm(trainX, trainy,predictX, predicty)
+# original_acc= train_knn(trainX, trainy,predictX, predicty)
+original_acc=train_svm(trainX, trainy,predictX, predicty)
 #original_acc=train_tree(trainX, trainy,predictX, predicty)
 
 def reverse_binary_GSC(vice_verse_attri_GSC,candidate_area,num_fea_original):
@@ -157,117 +155,82 @@ for each_item in initial_forest:
 accuracy_max=[]#存储循环20次中每次的最大准确率
 accuracy_max_feature=[]#存储循环20次中每次的最大准确率所对应的特征
 
-
-candidate_area=[]
-candidate_area_growing=[]
-candidate_area_temp=[]
-m=0
-while (m<loop_condition):
-    print'￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥第',m+1,'次循环￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥'
-    m += 1
-    vice_verse_attri=[]
-    j=0
-    while j<initialization_parameters[1]:
-        y = random.randint(0, num_fea_original - 1)
-        if y not in vice_verse_attri:
-            vice_verse_attri.append(y)
-            j=j+1
-        else:
-            continue
-    print'局部播种时选出的需要反转属性',vice_verse_attri
-    print'增加新树前area_limit_forest的长度', len(area_limit_forest)
+if __name__=='__main__':
+    candidate_area=[]
+    candidate_area_growing=[]
+    candidate_area_temp=[]
+    m=0
+    while (m<loop_condition):
+        print'￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥第',m+1,'次循环￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥'
+        m += 1
+        vice_verse_attri=[]
+        j=0
+        while j<initialization_parameters[1]:
+            y = random.randint(0, num_fea_original - 1)
+            if y not in vice_verse_attri:
+                vice_verse_attri.append(y)
+                j=j+1
+        print'局部播种时选出的需要反转属性',vice_verse_attri
+        print'增加新树前area_limit_forest的长度', len(area_limit_forest)
 
 
 
-    # print'######################################第',m,'local seeding播种开始######################################'
-    new_tree_nestification=[]#reverse_binary函数调用后返回的list会有嵌套
-    new_tree_nonestification=[]
-    new_tree_nestification.append(reverse_binary(vice_verse_attri,area_limit_forest))
-    new_tree_nonestification=list(itertools.chain.from_iterable(new_tree_nestification))
-    # print'new_tree_nonestification增长出新树的长度', len(new_tree_nonestification)
-    # for i in range(len(new_tree_nonestification)):
-    #     print'新生成的树',new_tree_nonestification[i].list,new_tree_nonestification[i].age
-    # for i in range(len(area_limit_forest)):
-    #     print'插入新树之前area_limit_forest的样子',area_limit_forest[i].list,area_limit_forest[i].age
-#向area_limit里插入新树
-    for each_item in new_tree_nonestification:
-        area_limit_forest.append(each_item)
-    # print'加入新树后area_limit_forest的长度',len(area_limit_forest)
-    # for i in range(len(area_limit_forest)):
-    #     print'新生成的area_limit_forest',area_limit_forest[i].list,area_limit_forest[i].age
+        # print'######################################第',m,'local seeding播种开始######################################'
+        new_tree_nestification=[]#reverse_binary函数调用后返回的list会有嵌套
+        new_tree_nonestification=[]
+        new_tree_nestification.append(reverse_binary(vice_verse_attri,area_limit_forest))
+        new_tree_nonestification=list(itertools.chain.from_iterable(new_tree_nestification))
+        for each_item in new_tree_nonestification:
+            area_limit_forest.append(each_item)
+        candidate_area_growing.append(select_trees(area_limit_forest))
+        candidate_area_temp=list(itertools.chain.from_iterable( candidate_area_growing))
+        candidate_area=candidate_area_temp
+        vice_verse_attri_GSC=[]
+        j=0
+        while j<initialization_parameters[2]:
+            y = random.randint(0, num_fea_original - 1)
+            if y not in vice_verse_attri_GSC:
+                vice_verse_attri_GSC.append(y)
+                j=j+1
+            else:
+                continue
+        after_GSC_reverse=[]#存放经过reverse_binary_GSC反转后的结果
+        after_GSC_reverse=reverse_binary_GSC(vice_verse_attri_GSC,candidate_area,num_fea_original)
+        area_limit_forest+=after_GSC_reverse
 
-    # print'######################################第',m,'local seeding播种开始结束######################################'
+        acc=[]
+        for i in range(len(area_limit_forest)):
+            fea_list = num_to_feature(area_limit_forest[i].list, feature)
+            if len(fea_list):
+                data_sample = read_data_feature(fea_list, trainX)
+                data_predict = read_data_feature(fea_list, predictX)
+                acc.append(train_knn(data_sample, trainy, data_predict, predicty))# 每棵树的准确率存在acc中
+            else:
+                acc.append(0)
+        # print('acc准确率的长度',len(acc))
+        # print('acc里面的准确率值',acc)
+        acc_max=max(acc)
+        print acc
+        accuracy_max.append(acc_max)
+        #print('最大准确率',acc_max)
+        acc_max_index=acc.index(acc_max)
+        #print('最大准确率索引值',acc_max_index)
+        tree_max=area_limit_forest[acc_max_index]#找到最优树在area_limit_forest中的位置,最优树即准确率最高的特征子集。
+        accuracy_max_feature.append(tree_max.list)
+        #print('最优树即准确率最高的特征子集:',tree_max.list,tree_max.age)
+        area_limit_forest[acc_max_index].age=0#最优树的age设为0
 
-
-    # print'######################################第',m,'population limiting 放入候选区开始##########################################'
-    candidate_area_growing.append(select_trees(area_limit_forest))
-    #new_tree_nonestification = list(itertools.chain.from_iterable(new_tree_nestification))
-    candidate_area_temp=list(itertools.chain.from_iterable( candidate_area_growing))
-    # for i in range(len(candidate_area_temp)):
-    #     if isinstance(candidate_area_temp[i].list,str):
-    #         candidate_area_temp[i].list=int(candidate_area_temp[i].list,2)
-    #     else:
-    #         continue
-    candidate_area=candidate_area_temp
-    # print'候选区candidate_area的长度：',len(candidate_area)
-    # for i in range(len(candidate_area)):
-    #     print'候选区candidate_area中准确率最小前num_extra颗树的list值，age值：',candidate_area[i].list,candidate_area[i].age
-    # print'移除多余树area_limit_forest的长度',len(area_limit_forest)
-    # for i in range(len(area_limit_forest)):
-    #     print'移除多余树area_limit_forest的list值，age值：',area_limit_forest[i].list,area_limit_forest[i].age
-    # print'#####################################第',m,'population limiting放入候选区结束##########################################'
-    #
-    #
-    # print'######################################第',m,'Global seeding GSC开始##########################################'
-#只需要根据GSC值完成候选区5%的反转即可
-    vice_verse_attri_GSC=[]
-    j=0
-    while j<initialization_parameters[2]:
-        y = random.randint(0, num_fea_original - 1)
-        if y not in vice_verse_attri_GSC:
-            vice_verse_attri_GSC.append(y)
-            j=j+1
-        else:
-            continue
-    after_GSC_reverse=[]#存放经过reverse_binary_GSC反转后的结果
-    after_GSC_reverse=reverse_binary_GSC(vice_verse_attri_GSC,candidate_area,num_fea_original)
-    area_limit_forest+=after_GSC_reverse
-
-    acc=[]
-    for i in range(len(area_limit_forest)):
-        fea_list = num_to_feature(area_limit_forest[i].list, feature)
-        if len(fea_list):
-            data_sample = read_data_feature(fea_list, trainX)
-            data_predict = read_data_feature(fea_list, predictX)
-            acc.append(train_knn(data_sample, trainy, data_predict, predicty))# 每棵树的准确率存在acc中
-            #acc.append(train_svm(trainX, trainy, predictX, predicty))
-            #acc.append(train_tree(trainX, trainy, predictX, predicty))
-        else:
-            acc.append(0)
-    # print('acc准确率的长度',len(acc))
-    # print('acc里面的准确率值',acc)
-    acc_max=max(acc)
-    print acc
-    accuracy_max.append(acc_max)
-    #print('最大准确率',acc_max)
-    acc_max_index=acc.index(acc_max)
-    #print('最大准确率索引值',acc_max_index)
-    tree_max=area_limit_forest[acc_max_index]#找到最优树在area_limit_forest中的位置,最优树即准确率最高的特征子集。
-    accuracy_max_feature.append(tree_max.list)
-    #print('最优树即准确率最高的特征子集:',tree_max.list,tree_max.age)
-    area_limit_forest[acc_max_index].age=0#最优树的age设为0
-
-    print'#####################################第',m,'update optimal更新最优结束##########################################'
+        print'#####################################第',m,'update optimal更新最优结束##########################################'
 
 
-print'feature index : ', feature
-print'feature number of Original data set :  ',num_fea_original#原始数据集特征数目
-print'original_accuracy is : ',original_acc
-print'FSFOA_accuracy is : ',float(max(accuracy_max))
-print'Feature subset ：',accuracy_max_feature[accuracy_max.index(max(accuracy_max))]
-print'length of candidate area ：',len(candidate_area)
-#处理dimension reduction
-num_one_index=num_to_feature(accuracy_max_feature[accuracy_max.index(max(accuracy_max))],feature)#被选中的最优特征子集中‘1’的索引，以列表的形式返回
-num_one=len(num_one_index)
-DR=float(1-(1.0*num_one/len(feature)))
-print'percent of dimension reduction : ',DR
+    print'feature index : ', feature
+    print'feature number of Original data set :  ',num_fea_original#原始数据集特征数目
+    print'original_accuracy is : ',original_acc
+    print'FSFOA_accuracy is : ',float(max(accuracy_max))
+    print'Feature subset ：',accuracy_max_feature[accuracy_max.index(max(accuracy_max))]
+    print'length of candidate area ：',len(candidate_area)
+    #处理dimension reduction
+    num_one_index=num_to_feature(accuracy_max_feature[accuracy_max.index(max(accuracy_max))],feature)#被选中的最优特征子集中‘1’的索引，以列表的形式返回
+    num_one=len(num_one_index)
+    DR=float(1-(1.0*num_one/len(feature)))
+    print'percent of dimension reduction : ',DR

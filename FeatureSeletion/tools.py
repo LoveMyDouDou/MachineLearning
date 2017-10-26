@@ -25,12 +25,20 @@ def load_data(filename):
 
 
 def read_data_feature(fetureList,dataSet):
+    '''
+    给出特征下标列表和数据集，构造特征列表
+    :param fetureList: 要构造的特征向量下标列表
+    :param dataSet: 数据集
+    :return: 特征向量列表（矩阵）
+    '''
     dataMat=mat(dataSet)
     row=dataMat.shape[0]#行数
+    # row=len(dataSet)#行数
     data_sample=[]
     for i in range(0,row):
         row_i=[]
         for j in fetureList:
+            # row_i.append(dataSet[i].get(j))
             row_i.append(dataMat[i,j])
         data_sample.append(row_i)
     return data_sample
@@ -141,7 +149,7 @@ def num_to_feature(num,feature_list):
     '''
     feature=[]
     for i in range(len(num)):
-        if num[i]=='1':
+        if num[i]==1:
             feature.append(feature_list[i])
     return feature
 
