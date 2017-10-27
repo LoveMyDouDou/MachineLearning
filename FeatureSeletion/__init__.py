@@ -1,8 +1,8 @@
 #coding=utf-8
 from FeatureSeletion.FSFOAG import read_in_trainset, read_in_predictset, random_init, one_point_hybridization, \
-    one_point_hybridization_knn
+    one_point_hybridization_knn, one_point_hybridization_knn_result
 from FeatureSeletion.tools import train_svm, train_knn, train_tree, num_to_feature, read_data_feature, num_to_string, \
-    string_to_numlist
+    string_to_numlist, num_to_list
 
 if __name__=='__main__':
     #训练集
@@ -42,39 +42,35 @@ if __name__=='__main__':
         num_string=num_to_string(num)
         forest[num_string]=acc
 
-        # print num
-        # print acc
-        # print "-------------"
 
-    # forest_list=sorted(forest.items(),key=lambda item:item[1],reverse=True)
-    # for i in forest_list:
-    #     print i[1],i[0]
-    forest_area = []
-    forest_temp=init_forest
+    # forest_area = []
+    forest_old=init_forest
+    res=[]
     for i in range(0,50):
-        forest,forest_temp=one_point_hybridization_knn(forest_temp,feature_list,trainx,trainy,predictx,predicty)
+        forest,forest_new=one_point_hybridization_knn(forest_old,feature_list,trainx,trainy,predictx,predicty)
         forest_list=sorted(forest.items(),key=lambda item:item[1],reverse=True)
-        # print '-----------第',i,'次----------------'
-        # print forest_list[0][1]
-        forest_area.append(string_to_numlist(forest_list[0][0]))
-        # forest_temp.append(string_to_numlist(forest_list[0][0]))
-        # for i in forest_list:
-        #     print i[1],i[0]
+        forest_next=[]
+        for j in range(0,10):
+            forest_next.append(forest_old[j])
+        for j in range(0,40):
+            forest_next.append(num_to_list(forest_list[j][0]))
+        forest_old=forest_next
+        res.append(forest_list[0][1])
 
-    # for i in forest_area:
-    #     print i
+        # for j in forest_list:
+        #     print j
+        # forest_area.append(string_to_numlist(forest_list[0][0]))
+    for i in sorted(res,reverse=True):
+        print i
 
-    result={}
-    for i in range(0,50):
-        forest,forest_area=one_point_hybridization_knn(forest_area,feature_list,trainx,trainy,predictx,predicty)
-        forest_list=sorted(forest.items(),key=lambda item:item[1],reverse=True)
-        # print '-----------第',i,'次----------------'
-        # print forest_list[0][1]
-        result[forest_list[0][0]]=forest_list[0][1]
-        # for i in forest_list:
-        #     print i[1],i[0]
+    # result={}
+    # for i in range(0,50):
+    #     forest,forest_area=one_point_hybridization_knn(forest_area,feature_list,trainx,trainy,predictx,predicty)
+    #     forest_list=sorted(forest.items(),key=lambda item:item[1],reverse=True)
+    #     result[forest_list[0][0]]=forest_list[0][1]
 
+    # result=one_point_hybridization_knn_result(init_forest, feature_list, trainx, trainy, predictx, predicty)
     # print result
-    result_list = sorted(result.items(), key=lambda item: item[1], reverse=True)
-    for i in result_list:
-        print i[1],i[0]
+    # result_list = sorted(result.items(), key=lambda item: item[1], reverse=True)
+    # for i in result_list:
+    #     print i[1],i[0]

@@ -1,7 +1,8 @@
 #coding=utf-8
 import random
 
-from FeatureSeletion.tools import load_data, num_to_feature, read_data_feature, train_knn, num_to_string
+from FeatureSeletion.tools import load_data, num_to_feature, read_data_feature, train_knn, num_to_string, \
+    string_to_numlist
 
 
 # loop_condition=8#最起码要大于lifetime=15的值 ，因为播种一次age才曾1
@@ -68,6 +69,17 @@ def one_point_hybridization(strlist):
 
 
 def one_point_hybridization_knn(forest_list,feature_list,trainx,trainy,predictx,predicty):
+    '''
+    一次单点杂交
+    :param forest_list: 森林列表，双层列表
+    :param feature_list:特征集合索引,特征集合的角标
+    :param trainx:训练集
+    :param trainy:训练集对应的分类
+    :param predictx:预测集合
+    :param predicty:预测集对应的分类
+    :return:森林字典:包括单点杂交后每棵树的准确率和森林的01串
+            森林列表:单点杂交后新的森林
+    '''
     forest = {}  # 记录森林里的准确率
     forest_list=one_point_hybridization(forest_list)
     for num in forest_list:
@@ -80,7 +92,20 @@ def one_point_hybridization_knn(forest_list,feature_list,trainx,trainy,predictx,
     return forest,forest_list
 
 
+def one_point_hybridization_knn_result(init_forest,feature_list, trainx, trainy, predictx, predicty):
+    forest_area = []
+    forest_temp = init_forest
+    for i in range(0, 50):
+        forest, forest_temp = one_point_hybridization_knn(forest_temp, feature_list, trainx, trainy, predictx, predicty)
+        forest_list = sorted(forest.items(), key=lambda item: item[1], reverse=True)
+        forest_area.append(string_to_numlist(forest_list[0][0]))
 
+    result = {}
+    for i in range(0, 50):
+        forest, forest_area = one_point_hybridization_knn(forest_area, feature_list, trainx, trainy, predictx, predicty)
+        forest_list = sorted(forest.items(), key=lambda item: item[1], reverse=True)
+        result[forest_list[0][0]] = forest_list[0][1]
+    return result
 
 
 

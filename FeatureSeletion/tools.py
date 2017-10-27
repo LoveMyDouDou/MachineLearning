@@ -169,4 +169,11 @@ def string_to_numlist(string):
         num.append(int(string[i]))
     return num
 
-
+def num_to_list(num):
+    list=[]
+    for i in range(0,len(num)):
+        if num[i]=='0':
+            list.append(0)
+        else:
+            list.append(1)
+    return list
