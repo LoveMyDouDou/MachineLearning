@@ -154,10 +154,19 @@ def num_to_feature(num,feature_list):
     return feature
 
 
+def num_to_string(num):
+    str=''
+    for i in num:
+        if i==0:
+            str+='0'
+        else:
+            str+='1'
+    return str
 
-
-
-
-
+def string_to_numlist(string):
+    num=[]
+    for i in range(len(string)):
+        num.append(int(string[i]))
+    return num
 
 
