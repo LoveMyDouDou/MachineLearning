@@ -10,13 +10,15 @@ def load_data(filename):
     :return: feature特征列表，是一个二维列表，存储特征矩阵
              label 标签列表，一维列表，存储每条记录对应的分类
     '''
-    numOfFeature=len(open(filename).readline().split(','))-1
+    # numOfFeature=len(open(filename).readline().split(','))-1
+    numOfFeature=len(open(filename).readline().split('\t'))-1
     feature=[]
     label=[]
     fr=open(filename)
     for line in fr.readlines():
         xi=[]
-        currentLine=line.strip().split(',')# curline=line.strip().split('\t')
+        # currentLine=line.strip().split(',')
+        currentLine=line.strip().split('\t')
         for i in range(0,numOfFeature):
             xi.append(float(currentLine[i]))
         feature.append(xi)
@@ -88,7 +90,7 @@ def acc_pre(label_pre,label_train):
     return 1.0*num/len(label_train)
 
 
-def train_knn(data_train,label_train,data_pre,label_pre):
+def train_knn(data_train,label_train,data_pre,label_pre,neighbor):
     '''
     KNN分类器
     :param data_train: 训练数据集合
@@ -97,7 +99,7 @@ def train_knn(data_train,label_train,data_pre,label_pre):
     :param label_pre: 预测标签集合
     :return: KNN分类器下的准确率
     '''
-    clf=neighbors.KNeighborsClassifier(n_neighbors=1)#创建分类器对象
+    clf=neighbors.KNeighborsClassifier(n_neighbors=neighbor)#创建分类器对象
     clf.fit(data_train,label_train)#用训练数据拟合分类器模型搜索
     predict=clf.predict(data_pre)
     acc=acc_pre(predict,label_pre)# 预测标签和ground_true标签对比 算准确率
@@ -177,3 +179,17 @@ def num_to_list(num):
         else:
             list.append(1)
     return list
+
+def calculate_DR(str):
+    total=len(str)
+    num=0
+    for i in range(0,total):
+        if str[i]=='0':
+            num+=1
+    return 1.0*num/total
+
+def num_all_zero(num):
+    for i in range(0,len(num)):
+        if num[i]==1:
+            return False
+    return True

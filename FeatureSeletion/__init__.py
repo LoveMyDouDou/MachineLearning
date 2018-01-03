@@ -1,76 +1,76 @@
 #coding=utf-8
+import os
+
 from FeatureSeletion.FSFOAG import read_in_trainset, read_in_predictset, random_init, one_point_hybridization, \
-    one_point_hybridization_knn, one_point_hybridization_knn_result
+    one_point_hybridization_knn, one_point_hybridization_knn_result, calculate_table_knn, gene_mutation, \
+    one_point_hybridization_svm_result, one_point_hybridization_train_tree_result, DO_FSFOA
+from FeatureSeletion.GFAFOA_HIGH import DO_FSFOA_HIGH
 from FeatureSeletion.tools import train_svm, train_knn, train_tree, num_to_feature, read_data_feature, num_to_string, \
-    string_to_numlist, num_to_list
+    string_to_numlist, num_to_list, calculate_DR
+
+
+
+
 
 if __name__=='__main__':
-    #训练集
-    trainset_file_dir = 'C:\processed_data\sonar\\'
-    # trainset_file_dir = 'C:\processed_data\SRBCT\\'
-    trainset_file_dir = trainset_file_dir.replace('\\', '/')
-    trainset_file_name='train_1.txt'
-    trainx,trainy=read_in_trainset(trainset_file_dir, trainset_file_name)
-    #预测集
-    predictset_file_dir = 'C:\processed_data\sonar\\'
-    # predictset_file_dir = 'C:\processed_data\SRBCT\\'
-    predictset_file_dir = predictset_file_dir.replace('\\', '/')
-    predictset_file_name = 'predict_1.txt'
-    predictx, predicty=read_in_predictset(predictset_file_dir, predictset_file_name)
+    g = os.walk("C:\processed_data")
 
-    # original_acc = train_svm(trainx, trainy, predictx, predicty)
-    original_acc= train_knn(trainx, trainy,predictx, predicty)
-    # original_acc=train_tree(trainx, trainy,predictx, predicty)
-    print original_acc
+    file_dir_list = []
+    for path, d, filelist in g:
+        file_dir_list.append(path)
+    # for dir in file_dir_list:
+    #     print dir
 
-
-    feature_list = []  # 特征集合索引,特征集合的角标
-    for i in range(0,len(trainx[0])):
-        feature_list.append(i)
-
-    forest={}  #记录森林里的准确率
-
-    init_forest=random_init(50,len(trainx[0]))
-    # for i in init_forest:
-    #     print i
-    for num in init_forest:
-        feature=num_to_feature(num,feature_list)
-        train_sample=read_data_feature(feature,trainx)
-        predict_sample=read_data_feature(feature,predictx)
-        acc = train_knn(train_sample, trainy, predict_sample, predicty)
-
-        num_string=num_to_string(num)
-        forest[num_string]=acc
+    for i in range(1, len(file_dir_list)):
+        for text_index in range(1,11):
+            # print file_dir_list[i]
+            s = str(file_dir_list[i]).split("\\")
+            file_dir_name=s[2]
+            # 训练集
+            trainset_file_dir = file_dir_list[i]+'\\'
+            trainset_file_dir = trainset_file_dir.replace('\\', '/')
+            # trainset_file_name = 'train_'+str(text_index)+"_2fold.txt"
+            # trainset_file_name = 'train_'+str(text_index)+".txt"
+            trainset_file_name = 'train_70'+".txt"
+            trainx, trainy = read_in_trainset(trainset_file_dir, trainset_file_name)
+            # 预测集
+            predictset_file_dir = file_dir_list[i]+'\\'
+            predictset_file_dir = predictset_file_dir.replace('\\', '/')
+            # predictset_file_name = 'predict_'+str(text_index)+".txt"
+            # predictset_file_name = 'predict_'+str(text_index)+"_2fold.txt"
+            predictset_file_name = 'predict_30'+".txt"
+            print predictset_file_dir
+            print predictset_file_name
+            # DO_FSFOA(file_dir_name,predictset_file_dir, predictset_file_name, trainx, trainy, 50)
+            DO_FSFOA_HIGH(file_dir_name,predictset_file_dir, predictset_file_name, trainx, trainy, 100)
+    print 'updating...'
 
 
-    # forest_area = []
-    forest_old=init_forest
-    res=[]
-    for i in range(0,50):
-        forest,forest_new=one_point_hybridization_knn(forest_old,feature_list,trainx,trainy,predictx,predicty)
-        forest_list=sorted(forest.items(),key=lambda item:item[1],reverse=True)
-        forest_next=[]
-        for j in range(0,10):
-            forest_next.append(forest_old[j])
-        for j in range(0,40):
-            forest_next.append(num_to_list(forest_list[j][0]))
-        forest_old=forest_next
-        res.append(forest_list[0][1])
+    # #训练集
+    # trainset_file_dir = 'C:\processed_data\sonar\\'
+    # trainset_file_dir = trainset_file_dir.replace('\\', '/')
+    # trainset_file_name='train_1.txt'
+    # trainx,trainy=read_in_trainset(trainset_file_dir, trainset_file_name)
+    # #预测集
+    # predictset_file_dir = 'C:\processed_data\sonar\\'
+    # predictset_file_dir = predictset_file_dir.replace('\\', '/')
+    # predictset_file_name = 'predict_1.txt'
 
-        # for j in forest_list:
-        #     print j
-        # forest_area.append(string_to_numlist(forest_list[0][0]))
-    for i in sorted(res,reverse=True):
-        print i
+    # DO_FSFOA(predictset_file_dir, predictset_file_name,trainx,trainy,2)
+    print 'execute end'
 
-    # result={}
-    # for i in range(0,50):
-    #     forest,forest_area=one_point_hybridization_knn(forest_area,feature_list,trainx,trainy,predictx,predicty)
-    #     forest_list=sorted(forest.items(),key=lambda item:item[1],reverse=True)
-    #     result[forest_list[0][0]]=forest_list[0][1]
 
-    # result=one_point_hybridization_knn_result(init_forest, feature_list, trainx, trainy, predictx, predicty)
-    # print result
-    # result_list = sorted(result.items(), key=lambda item: item[1], reverse=True)
-    # for i in result_list:
-    #     print i[1],i[0]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
